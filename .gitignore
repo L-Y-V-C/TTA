@@ -1,3 +1,11 @@
+# Folders
+bin/
+obj/
+
+# IDE files
+*.cbp
+*.layout
+
 # Prerequisites
 *.d
 
