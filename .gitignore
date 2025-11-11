@@ -1,10 +1,12 @@
 # Folders
 bin/
 obj/
+AP_BBC_CNN/
 
 # IDE files
 *.cbp
 *.layout
+*.depend
 
 # Prerequisites
 *.d
