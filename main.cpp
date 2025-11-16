@@ -1,14 +1,19 @@
 #include <iostream>
 
 #include "hh/lovins.hh"
+#include "hh/mvector.hh"
+#include "hh/node.hh"
 
 int main()
 {
     Lovins lv;
+    /*
     lv.readAppendixA();
     lv.readStopwords();
     // ==================================================
-    lv.readNews("AP_test");
+    lv.readNews("AP_test");*/
+
+    Node n1;
     /*
     for(auto i : lv.appA){
         cout<<i[0].first.length()<<endl;
