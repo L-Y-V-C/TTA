@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+const int V_INCREMENT = 5;
+
 template <typename T>
 class Mvector{
 public:
@@ -81,9 +83,9 @@ void Mvector<T>::push_back(const T& value){
     if(length >= capacity){
         size_t newCapacity;
         if(!capacity)
-            newCapacity = 5;
+            newCapacity = V_INCREMENT;
         else
-            newCapacity = capacity + 5;
+            newCapacity = capacity + V_INCREMENT;
         resize(newCapacity);
     }
     data[length] = value;
