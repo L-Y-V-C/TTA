@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+const int V_INCREMENT = 5;
+
 template <typename T>
 class Mvector{
 public:
@@ -11,12 +13,12 @@ public:
     Mvector(const Mvector<T>& inMvector);
     ~Mvector();
     Mvector& operator=(const Mvector<T>& inMvector);
-    T& operator[](size_t idx);
+    T& operator[](size_t idx) const;
     void push_back(const T& value);
     void resize(size_t newCapacity);
     void pop_back();
-    size_t size();
-    bool empty();
+    size_t size() const;
+    bool empty() const;
     void clear();
     void erase(size_t idx);
     T* begin();
@@ -72,7 +74,7 @@ Mvector<T>& Mvector<T>::operator=(const Mvector<T>& inMvector){
 }
 
 template <typename T>
-T& Mvector<T>::operator[](size_t idx){
+T& Mvector<T>::operator[](size_t idx) const{
     return data[idx];
 }
 
@@ -81,9 +83,9 @@ void Mvector<T>::push_back(const T& value){
     if(length >= capacity){
         size_t newCapacity;
         if(!capacity)
-            newCapacity = 5;
+            newCapacity = V_INCREMENT;
         else
-            newCapacity = capacity + 5;
+            newCapacity = capacity + V_INCREMENT;
         resize(newCapacity);
     }
     data[length] = value;
@@ -107,12 +109,12 @@ void Mvector<T>::pop_back(){
 }
 
 template <typename T>
-size_t Mvector<T>::size(){
+size_t Mvector<T>::size() const{
     return length;
 }
 
 template <typename T>
-bool Mvector<T>::empty(){
+bool Mvector<T>::empty() const{
     return !length;
 }
 

@@ -7,23 +7,11 @@ using namespace std;
 
 class Rect{
 public:
-    Rect(int x = 0, int y = 0) :
-        minX(x), minY(y), maxX(x), maxY(y){}
-    Rect(int inMinX, int inMinY, int inMaxX, int inMaxY) :
-        minX(inMinX), minY(inMinY), maxX(inMaxX), maxY(inMaxY){}
-    bool overlaps(const Rect& inRect){
-        return !(minX > inRect.maxX || maxX < inRect.minX ||
-                 minY > inRect.maxY || maxY < inRect.minY);
-    }
-    Rect combine(const Rect& inRect){
-        return Rect(min(minX, inRect.minX),
-                    min(minY, inRect.minY),
-                    max(maxX, inRect.maxX),
-                    max(maxY, inRect.maxY));
-    }
-    int area(){
-        return (maxX - minX) * (maxY - minY);
-    }
+    Rect(int x = 0, int y = 0);
+    Rect(int inMinX, int inMinY, int inMaxX, int inMaxY);
+    bool overlaps(const Rect& inRect);
+    Rect combine(const Rect& inRect);
+    int area();
 
     int minX, minY, maxX, maxY;
 };
