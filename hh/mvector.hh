@@ -13,12 +13,12 @@ public:
     Mvector(const Mvector<T>& inMvector);
     ~Mvector();
     Mvector& operator=(const Mvector<T>& inMvector);
-    T& operator[](size_t idx);
+    T& operator[](size_t idx) const;
     void push_back(const T& value);
     void resize(size_t newCapacity);
     void pop_back();
-    size_t size();
-    bool empty();
+    size_t size() const;
+    bool empty() const;
     void clear();
     void erase(size_t idx);
     T* begin();
@@ -74,7 +74,7 @@ Mvector<T>& Mvector<T>::operator=(const Mvector<T>& inMvector){
 }
 
 template <typename T>
-T& Mvector<T>::operator[](size_t idx){
+T& Mvector<T>::operator[](size_t idx) const{
     return data[idx];
 }
 
@@ -109,12 +109,12 @@ void Mvector<T>::pop_back(){
 }
 
 template <typename T>
-size_t Mvector<T>::size(){
+size_t Mvector<T>::size() const{
     return length;
 }
 
 template <typename T>
-bool Mvector<T>::empty(){
+bool Mvector<T>::empty() const{
     return !length;
 }
 

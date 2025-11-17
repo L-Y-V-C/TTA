@@ -1,65 +1,59 @@
 #include <iostream>
 
 #include "hh/lovins.hh"
-#include "hh/mvector.hh"
 #include "hh/mhashtable.hh"
 #include "hh/topicdata.hh"
+#include "hh/rtree.hh"
+
+#
 
 int main()
 {
     Lovins lv;
 
-    MhashTable<string, TopicData> wordData;
+    RTree rtree;
+
+    rtree.printTree();
+
+    MhashTable<string, TopicData> wordHash;
     int nextId = 0;
+    int currentTime = 0;
 
-    string token = "hello";
+    // Procesar palabras
+    vector<string> words = {"hello", "world", "hello", "code", "hello", "world"};
 
-    if(!wordData.find(token)) {
-        wordData[token] = TopicData(nextId, 1);
-        nextId++;
-    } else {
-        wordData[token].frequency++;
+    for (size_t i = 0; i < words.size(); i++) {
+        string word = words[i];
+
+        if (!wordHash.find(word)) {
+            // Nueva palabra
+            wordHash[word] = TopicData(nextId, 1);
+            rtree.insertPoint(nextId, currentTime, 1);
+            nextId++;
+        } else {
+            // Palabra existente: incrementar frecuencia
+            wordHash[word].frequency++;
+            int id = wordHash[word].id;
+            int freq = wordHash[word].frequency;
+            rtree.insertPoint(id, currentTime, freq);
+        }
+
+        currentTime++;
     }
 
-    //token = "bye";
-    if(!wordData.find(token)) {
-        wordData[token] = TopicData(nextId, 1);
-        nextId++;
-    } else {
-        wordData[token].frequency++;
-    }
+    rtree.printStats();
+    rtree.printTree();
 
-    cout << "Capacity: " << wordData.capacity << endl;
-    cout << "Size: " << wordData.length << endl;
-    cout << "Load Factor: " << static_cast<double>(wordData.length) / wordData.capacity << endl;
+    cout << "\n\nCapacity: " << wordHash.capacity << endl;
+    cout << "Size: " << wordHash.length << endl;
+    cout << "Load Factor: " << static_cast<double>(wordHash.length) / wordHash.capacity << endl;
 
-    token = "hello";
-    TopicData info = wordData[token];
-    int id = info.id;
-    int freq = info.frequency;
 
-    cout<<"found:\nid:"<<id<<"\nfreq:"<<freq<<endl;
-
-    /*
+/*
     lv.readAppendixA();
     lv.readStopwords();
     // ==================================================
-    lv.readNews("AP_test");*/
-
-    /*
-    for(auto i : lv.appA){
-        cout<<i[0].first.length()<<endl;
-        for(auto j : i)
-            cout<<j.first<<" "<<j.second<<endl;
-    }
-    for(auto i : lv.stopwords)
-        cout<<i<<endl;
-    */
-    /*
-    for(auto& i : lv.appA){
-        //for(auto& j : i.second)
-            cout<<i.first<<" "<<i.second<<endl;
-    }
-    */
+    lv.readNews("AP_test");
+*/
     return 0;
 }

@@ -1,8 +1,8 @@
 #ifndef NODE_HH
 #define NODE_HH
 
-#include "../hh/entry.hh"
-#include "../hh/mvector.hh"
+#include "entry.hh"
+#include "mvector.hh"
 
 const int MAX_ENTRIES = 10;
 const int MIN_ENTRIES = 1;
