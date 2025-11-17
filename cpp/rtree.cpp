@@ -201,7 +201,6 @@ void RTree::searchRect(int nodeIndex, const Rect& query, Mvector<Entry>& result)
     }
 }
 
-
 void RTree::insertPoint(int topicId, int time, int frequency){
     Entry e(time, frequency, topicId);
     insertEntry(rootIndex, e);

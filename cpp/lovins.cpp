@@ -34,54 +34,44 @@ void Lovins::readStopwords(){
     file.close();
 }
 
-void Lovins::readNews(const string& folderName){
-    if(!fs::exists(folderName)){
-        cerr<<"ERROR FINDING DIRECTORY\n";
-        return;
+vector<pair<string, int>> Lovins::readFile(const string& fileName,
+                                           int maxWords){
+    ifstream file(fileName);
+    if (!file.is_open()) {
+        cerr<<"ERROR OPENING FILE\n";
+        return vector<pair<string, int>>();
     }
-    for(const auto& entry : fs::directory_iterator(folderName)){
-        if(entry.is_regular_file()){
-            string fileName = entry.path().filename().string();
-            cout<<"Archivo: "<<fileName<<endl;
-            ifstream file(entry.path());
-            if(!file.is_open()){
-                cerr<<"ERROR OPENING FOLDER FILES\n";
-                return;
+    unordered_map<string, int> wordCount;
+    string line1, token;
+    stringstream line2;
+    while(getline(file, line1)){
+        line2 = (stringstream)line1;
+        while(line2 >> line1){
+            token.clear();
+            for(char& c : line1){
+                if(isalpha(c) || c == '\'')
+                    token += tolower(c);
             }
-            string line1, token;
-            stringstream line2;
-            vector<string> words;
-            while(getline(file, line1)){
-                line2 = (stringstream)line1;
-                while(line2>>line1){
-                    token.clear();
-                    for(char& c : line1){
-                        if(isalpha(c) || c == '\'')
-                            token += tolower(c);
-                    }
-                    if(token.empty())
-                        continue;
-                    if(stopwords.find(token) == stopwords.end())
-                        words.push_back(token);
-                }
-            }
-            file.close();
-
-            for(auto& w : words){
-                cout<<w<<" ";
-                string finalToken = aplyStemming(w);
-                cout<<"-"<<finalToken<<"-";
-                //if(!cond.empty())
-                    //cout<<"cond(f) "<<cond;
-                //else
-                    //cout<<cond<<" ";
-                cout<<endl;
-            }
-            cout<<endl;
-
-            cout<<"======================================================\n";
+            if(token.empty())
+                continue;
+            if(stopwords.find(token) != stopwords.end())
+                continue;
+            string stem = aplyStemming(token);
+            wordCount[stem]++;
         }
     }
+    file.close();
+    int maxFreq = 0;
+    for(const auto& w : wordCount){
+        if(w.second > maxFreq)
+            maxFreq = w.second;
+    }
+    vector<pair<string, int>> topWords;
+    for(const auto& w : wordCount){
+        if(w.second == maxFreq && topWords.size() < maxWords)
+            topWords.push_back({w.first, w.second});
+    }
+    return topWords;
 }
 
 string Lovins::aplyStemming(const string& token){
@@ -93,14 +83,8 @@ string Lovins::aplyStemming(const string& token){
         if(itr != appA.end()){
             cond = itr->second;
             stem = token.substr(0, token.size() - itr->first.size());
-            if(stem.size() >= minStemSize && evaluateCondition(cond, stem)){
+            if(stem.size() >= minStemSize && evaluateCondition(cond, stem))
                 finalToken = recoding(stem);
-                //finalToken = recoding(token.substr(0, token.size() - ), stem);
-            }
-            //cout<<" -"<<finalToken<<"- ";
-            //cout<<itr->first<<" "<<stem<<" ";
-            //else
-                //cout<<"f "<<stem<<"-";
             break;
         }
     }
@@ -109,7 +93,22 @@ string Lovins::aplyStemming(const string& token){
 
 bool Lovins::evaluateCondition(const string& cond, const string& stem){
     int stemSize = stem.size();
+    if(stemSize == 0)
+        return false;
     char lastChar = stem.back();
+
+    // ---
+    auto has2 = (stemSize >= 2);
+    auto has3 = (stemSize >= 3);
+    auto has4 = (stemSize >= 4);
+
+    auto endsWith = [&](const string& s) -> bool {
+        size_t n = s.size();
+        if (stemSize < n) return false;
+        return stem.compare(stemSize - n, n, s) == 0;
+    };
+    // ---
+
     if(cond == "A"){
         return true;
     }else if(cond == "B"){
@@ -131,7 +130,8 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
         return stemSize >= 3 && lastChar == 'f';
     }
     else if(cond == "H"){
-        return lastChar == 't' || stem.substr(stemSize - 2) == "ll";
+        return lastChar == 't' || (has2 && endsWith("ll"));
+        //return lastChar == 't' || stem.substr(stemSize - 2) == "ll";
     }
     else if(cond == "I"){
         return lastChar != 'o' && lastChar != 'e';
@@ -152,9 +152,10 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
         if(lastChar == 'u' || lastChar == 'x')
             return false;
         if(lastChar == 's'){
-            if (stem[stemSize - 2] == 'o')
-                return true;
-            return false;
+            return (has2 && stem[stemSize - 2] == 'o');
+            //if (stem[stemSize - 2] == 'o')
+                //return true;
+            //return false;
         }
         return true;
     }
@@ -162,7 +163,9 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
         return lastChar != 'a' && lastChar != 'c' && lastChar != 'e' && lastChar != 'm';
     }
     else if(cond == "N"){
-        if(stem[stemSize - 3] == 's')
+        if(!has3)
+            return false; // ---
+        if(stemSize >= 3 && stem[stemSize - 3] == 's')
             return stemSize >= 4;
         return stemSize >= 3;
     }
@@ -179,10 +182,13 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
         return lastChar == 'n' || lastChar == 'r';
     }
     else if(cond == "S"){
-        if(stem.substr(stemSize - 2) == "dr")
-            return true;
+        if(has2 && endsWith("dr"))
+            return true; // ---
+        //if(stem.substr(stemSize - 2) == "dr")
+            //return true;
         if(lastChar == 't'){
-            if(stem[stemSize - 2] == 't')
+            //if(stem[stemSize - 2] == 't')
+            if(has2 && stem[stemSize - 2] == 't')
                 return false;
             return true;
         }
@@ -192,7 +198,8 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
         if(lastChar == 's')
             return true;
         if(lastChar == 't'){
-            if(stem[stemSize - 2] == 'o')
+            //if(stem[stemSize - 2] == 'o')
+            if(has2 && stem[stemSize - 2] == 'o')
                 return false;
             return true;
         }
@@ -208,8 +215,10 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
         return lastChar != 's' && lastChar != 'u';
     }
     else if(cond == "X"){
-        if(stemSize < 3)
-            return false;
+        if(!has3)
+            return false; //---
+        //if(stemSize < 3)
+            //return false;
         if(lastChar == 'l' || lastChar == 'i')
             return true;
         if(stem[stemSize - 3] == 'u' && lastChar == 'e')
@@ -217,7 +226,8 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
         return false;
     }
     else if(cond == "Y"){
-        return stem.substr(stemSize - 2) == "in";
+        return has2 && endsWith("in");
+        //return stem.substr(stemSize - 2) == "in";
     }
     else if(cond == "Z"){
         return lastChar != 'f';
@@ -225,18 +235,28 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
     else if(cond == "AA"){
         if(lastChar == 'd' || lastChar == 'f' || lastChar == 't' || lastChar == 'l')
             return true;
-        string End = stem.substr(stemSize - 2);
-        if (End == "ph" || End == "th" || End == "er" || End == "or" || End == "es")
-            return true;
+        if(has2){
+            string End2 = stem.substr(stemSize - 2);
+            return (End2 == "ph" || End2 == "th" || End2 == "er" || End2 == "or" || End2 == "es");
+        }
+        //string End = stem.substr(stemSize - 2);
+        //if (End == "ph" || End == "th" || End == "er" || End == "or" || End == "es")
+        //    return true;
         return false;
     }
     else if(cond == "BB"){
         if(stemSize < 3)
             return false;
+        if(has3 && endsWith("met"))
+            return false;
+        if(has4 && endsWith("ryst"))
+            return false;
+        /*
         if(stem.substr(stemSize - 3) == "met")
             return false;
         if(stemSize >= 4 && stem.substr(stemSize - 4) == "ryst")
             return false;
+        */
         return true;
     }
     else if(cond == "CC"){
@@ -248,6 +268,8 @@ bool Lovins::evaluateCondition(const string& cond, const string& stem){
 string Lovins::recoding(const string& inStem){
     string suffix, stem = inStem;
     int stemSize = stem.size();
+    if(stemSize == 0)
+        return inStem;
     char last = stem[stemSize - 1];
     char prev = stem[stemSize - 2];
     if(last == prev && (last == 'b' || last == 'd' || last == 'g' ||

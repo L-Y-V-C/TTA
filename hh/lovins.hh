@@ -8,11 +8,9 @@
 #include <string>
 #include <utility>
 #include <cctype>
-#include <filesystem>
 #include <unordered_set>
 #include <unordered_map>
 
-namespace fs = std::filesystem;
 using namespace std;
 
 class Lovins{
@@ -20,7 +18,8 @@ public:
     Lovins();
     void readAppendixA();
     void readStopwords();
-    void readNews(const string& folderName);
+    vector<pair<string, int>> readFile(const string& fileName,
+                                       int maxWords = 5);
     string aplyStemming(const string& token);
     bool evaluateCondition(const string& cond, const string& stem);
     string recoding(const string& inStem);
