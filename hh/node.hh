@@ -1,11 +1,13 @@
 #ifndef NODE_HH
 #define NODE_HH
 
+#include <cmath>
+
 #include "entry.hh"
 #include "mvector.hh"
 
-const int MAX_ENTRIES = 10;
-const int MIN_ENTRIES = 1;
+const int MAX_ENTRIES = 5;
+const int MIN_ENTRIES = ceil(MAX_ENTRIES * 0.4);
 
 class Node{
 public:

@@ -3,7 +3,9 @@
 TTA::TTA(int batchSize, int intervalSec, int k, int m, int maxWords) :
     nextWordId(0), currentTime(0), maxFrequency(0),
     initialBatchSize(batchSize), readIntervalSeconds(intervalSec),
-    topK(k), lastMNews(m), maxWordsPerFile(maxWords), currentFileIndex(0){}
+    topK(k), lastMNews(m), maxWordsPerFile(maxWords), currentFileIndex(0){
+        allNewsFiles.reserve(batchSize);
+    }
 
 void TTA::initialize(const string& stopwordsPath, const string& appendixPath){
     stemmer.readStopwords();
@@ -35,6 +37,7 @@ void TTA::insertWord(const string& word, int frequency){
     }
     if(wordHash[word].frequency > maxFrequency)
         maxFrequency = wordHash[word].frequency;
+    //rtree.printTree();
 }
 
 void TTA::processNews() {
@@ -51,6 +54,9 @@ void TTA::processNews() {
     for(size_t i = 0; i < initialBatchSize && i < allNewsFiles.size(); i++){
         // STEMMING
         auto stemmingStart = high_resolution_clock::now();
+        // =================================
+        cout<<"READING "<<allNewsFiles[i]<<"--------\n";
+        // =================================
         vector<pair<string, int>> topWords =
             stemmer.readFile(allNewsFiles[i], maxWordsPerFile);
         auto stemmingEnd = high_resolution_clock::now();
@@ -131,7 +137,7 @@ Mvector<Mpair<string, int>> TTA::getTopKTopics() {
 
     Rect query(minTime, minFreq, currentTime, maxFrequency);
     Mvector<Entry> results;
-    rtree.search(query.minX, query.minY, query.maxX, query.maxY, results);
+    rtree.search(minTime, minFreq, currentTime, maxFrequency, results);
 
     MhashTable<int, int> topicMaxFreq;
     for(size_t i = 0; i < results.size(); i++){

@@ -45,17 +45,22 @@ vector<pair<string, int>> Lovins::readFile(const string& fileName,
     string line1, token;
     stringstream line2;
     while(getline(file, line1)){
-        line2 = (stringstream)line1;
+        line2.clear();
+        line2.str(line1);
         while(line2 >> line1){
             token.clear();
             for(char& c : line1){
                 if(isalpha(c) || c == '\'')
                     token += tolower(c);
             }
+            if(token.empty() || stopwords.count(token))
+                continue;
+            /*
             if(token.empty())
                 continue;
             if(stopwords.find(token) != stopwords.end())
                 continue;
+            */
             string stem = aplyStemming(token);
             wordCount[stem]++;
         }
@@ -67,6 +72,7 @@ vector<pair<string, int>> Lovins::readFile(const string& fileName,
             maxFreq = w.second;
     }
     vector<pair<string, int>> topWords;
+    topWords.reserve(maxWords);
     for(const auto& w : wordCount){
         if(w.second == maxFreq && topWords.size() < maxWords)
             topWords.push_back({w.first, w.second});
@@ -75,290 +81,244 @@ vector<pair<string, int>> Lovins::readFile(const string& fileName,
 }
 
 string Lovins::aplyStemming(const string& token){
-    string cond, stem, finalToken = token;
+    //string cond, stem, finalToken = token;
     const int minStemSize = 2;
-    for(size_t i = 0; i < token.size(); i++){
+    size_t tokenLen = token.size();
+    if(tokenLen < 3)
+        return token;
+    for(size_t i = 0; i < tokenLen; i++){
         string suffix = token.substr(i);
         auto itr = appA.find(suffix);
         if(itr != appA.end()){
-            cond = itr->second;
-            stem = token.substr(0, token.size() - itr->first.size());
-            if(stem.size() >= minStemSize && evaluateCondition(cond, stem))
-                finalToken = recoding(stem);
+            //cond = itr->second;
+            //stem = token.substr(0, token.size() - itr->first.size());
+            size_t stemLen = tokenLen - itr->first.size();
+            if(stemLen >= (size_t)minStemSize){
+                string stem = token.substr(0, stemLen);
+                if(evaluateCondition(itr->second, stem))
+                    return recoding(stem);
+            }
+            //if(stem.size() >= minStemSize && evaluateCondition(cond, stem))
+                //finalToken = recoding(stem);
             break;
         }
     }
-    return finalToken;
+    return token;
+    //return finalToken;
 }
 
 bool Lovins::evaluateCondition(const string& cond, const string& stem){
-    int stemSize = stem.size();
-    if(stemSize == 0)
-        return false;
-    char lastChar = stem.back();
+    size_t len = stem.size();
+    if(len == 0) return false;
 
-    // ---
-    auto has2 = (stemSize >= 2);
-    auto has3 = (stemSize >= 3);
-    auto has4 = (stemSize >= 4);
+    char last = stem[len - 1];
 
-    auto endsWith = [&](const string& s) -> bool {
-        size_t n = s.size();
-        if (stemSize < n) return false;
-        return stem.compare(stemSize - n, n, s) == 0;
+    // Función auxiliar segura para comparar sufijos
+    auto endsWith = [&](const char* suffix, size_t suffixLen) -> bool {
+        if(len < suffixLen) return false;
+        for(size_t i = 0; i < suffixLen; i++){
+            if(stem[len - suffixLen + i] != suffix[i]) return false;
+        }
+        return true;
     };
-    // ---
 
-    if(cond == "A"){
-        return true;
-    }else if(cond == "B"){
-        return stemSize >= 3;
+    if(cond == "A") return true;
+    if(cond == "B") return len >= 3;
+    if(cond == "C") return len >= 4;
+    if(cond == "D") return len >= 5;
+    if(cond == "E") return last != 'e';
+    if(cond == "F") return len >= 3 && last != 'e';
+    if(cond == "G") return len >= 3 && last == 'f';
+
+    if(cond == "H"){
+        return last == 't' || endsWith("ll", 2);
     }
-    else if(cond == "C"){
-        return stemSize >= 4;
+    if(cond == "I") return last != 'o' && last != 'e';
+    if(cond == "J") return last != 'a' && last != 'e';
+
+    if(cond == "K"){
+        if(len < 3) return false;
+        if(last == 'l' || last == 'i') return true;
+        return len >= 3 && stem[len - 3] == 'u' && last == 'e';
     }
-    else if(cond == "D"){
-        return stemSize >= 5;
-    }
-    else if(cond == "E"){
-        return lastChar != 'e';
-    }
-    else if(cond == "F"){
-        return stemSize >= 3 && lastChar != 'e';
-    }
-    else if(cond == "G"){
-        return stemSize >= 3 && lastChar == 'f';
-    }
-    else if(cond == "H"){
-        return lastChar == 't' || (has2 && endsWith("ll"));
-        //return lastChar == 't' || stem.substr(stemSize - 2) == "ll";
-    }
-    else if(cond == "I"){
-        return lastChar != 'o' && lastChar != 'e';
-    }
-    else if(cond == "J"){
-        return lastChar != 'a' && lastChar != 'e';
-    }
-    else if(cond == "K"){
-        if(stemSize < 3)
-            return false;
-        if(lastChar == 'l' || lastChar == 'i')
-            return true;
-        if(stem[stemSize - 3] == 'u' && lastChar == 'e')
-            return true;
-        return false;
-    }
-    else if(cond == "L"){
-        if(lastChar == 'u' || lastChar == 'x')
-            return false;
-        if(lastChar == 's'){
-            return (has2 && stem[stemSize - 2] == 'o');
-            //if (stem[stemSize - 2] == 'o')
-                //return true;
-            //return false;
+
+    if(cond == "L"){
+        if(last == 'u' || last == 'x') return false;
+        if(last == 's'){
+            return len >= 2 && stem[len - 2] == 'o';
         }
         return true;
     }
-    else if(cond == "M"){
-        return lastChar != 'a' && lastChar != 'c' && lastChar != 'e' && lastChar != 'm';
+
+    if(cond == "M"){
+        return last != 'a' && last != 'c' && last != 'e' && last != 'm';
     }
-    else if(cond == "N"){
-        if(!has3)
-            return false; // ---
-        if(stemSize >= 3 && stem[stemSize - 3] == 's')
-            return stemSize >= 4;
-        return stemSize >= 3;
+
+    if(cond == "N"){
+        if(len < 3) return false;
+        return (stem[len - 3] == 's') ? (len >= 4) : true;
     }
-    else if(cond == "O"){
-        return lastChar == 'l' || lastChar == 'i';
-    }
-    else if(cond == "P"){
-        return lastChar != 'c';
-    }
-    else if(cond == "Q"){
-        return stemSize >= 3 && lastChar != 'l' && lastChar != 'n';
-    }
-    else if(cond == "R"){
-        return lastChar == 'n' || lastChar == 'r';
-    }
-    else if(cond == "S"){
-        if(has2 && endsWith("dr"))
-            return true; // ---
-        //if(stem.substr(stemSize - 2) == "dr")
-            //return true;
-        if(lastChar == 't'){
-            //if(stem[stemSize - 2] == 't')
-            if(has2 && stem[stemSize - 2] == 't')
-                return false;
-            return true;
+
+    if(cond == "O") return last == 'l' || last == 'i';
+    if(cond == "P") return last != 'c';
+    if(cond == "Q") return len >= 3 && last != 'l' && last != 'n';
+    if(cond == "R") return last == 'n' || last == 'r';
+
+    if(cond == "S"){
+        if(endsWith("dr", 2)) return true;
+        if(last == 't'){
+            return !(len >= 2 && stem[len - 2] == 't');
         }
         return false;
     }
-    else if(cond == "T"){
-        if(lastChar == 's')
-            return true;
-        if(lastChar == 't'){
-            //if(stem[stemSize - 2] == 'o')
-            if(has2 && stem[stemSize - 2] == 'o')
-                return false;
-            return true;
+
+    if(cond == "T"){
+        if(last == 's') return true;
+        if(last == 't'){
+            return !(len >= 2 && stem[len - 2] == 'o');
         }
         return false;
     }
-    else if(cond == "U"){
-        return lastChar == 'l' || lastChar == 'm' || lastChar == 'n' || lastChar == 'r';
+
+    if(cond == "U"){
+        return last == 'l' || last == 'm' || last == 'n' || last == 'r';
     }
-    else if(cond == "V"){
-        return lastChar == 'c';
+    if(cond == "V") return last == 'c';
+    if(cond == "W") return last != 's' && last != 'u';
+
+    if(cond == "X"){
+        if(len < 3) return false;
+        if(last == 'l' || last == 'i') return true;
+        return stem[len - 3] == 'u' && last == 'e';
     }
-    else if(cond == "W"){
-        return lastChar != 's' && lastChar != 'u';
+
+    if(cond == "Y") return endsWith("in", 2);
+    if(cond == "Z") return last != 'f';
+
+    if(cond == "AA"){
+        if(last == 'd' || last == 'f' || last == 't' || last == 'l') return true;
+        if(len < 2) return false;
+        return endsWith("ph", 2) || endsWith("th", 2) ||
+               endsWith("er", 2) || endsWith("or", 2) || endsWith("es", 2);
     }
-    else if(cond == "X"){
-        if(!has3)
-            return false; //---
-        //if(stemSize < 3)
-            //return false;
-        if(lastChar == 'l' || lastChar == 'i')
-            return true;
-        if(stem[stemSize - 3] == 'u' && lastChar == 'e')
-            return true;
-        return false;
-    }
-    else if(cond == "Y"){
-        return has2 && endsWith("in");
-        //return stem.substr(stemSize - 2) == "in";
-    }
-    else if(cond == "Z"){
-        return lastChar != 'f';
-    }
-    else if(cond == "AA"){
-        if(lastChar == 'd' || lastChar == 'f' || lastChar == 't' || lastChar == 'l')
-            return true;
-        if(has2){
-            string End2 = stem.substr(stemSize - 2);
-            return (End2 == "ph" || End2 == "th" || End2 == "er" || End2 == "or" || End2 == "es");
-        }
-        //string End = stem.substr(stemSize - 2);
-        //if (End == "ph" || End == "th" || End == "er" || End == "or" || End == "es")
-        //    return true;
-        return false;
-    }
-    else if(cond == "BB"){
-        if(stemSize < 3)
-            return false;
-        if(has3 && endsWith("met"))
-            return false;
-        if(has4 && endsWith("ryst"))
-            return false;
-        /*
-        if(stem.substr(stemSize - 3) == "met")
-            return false;
-        if(stemSize >= 4 && stem.substr(stemSize - 4) == "ryst")
-            return false;
-        */
+
+    if(cond == "BB"){
+        if(len < 3) return false;
+        if(endsWith("met", 3)) return false;
+        if(endsWith("ryst", 4)) return false;
         return true;
     }
-    else if(cond == "CC"){
-        return lastChar == 'l';
-    }
+
+    if(cond == "CC") return last == 'l';
+
     return false;
 }
 
 string Lovins::recoding(const string& inStem){
-    string suffix, stem = inStem;
-    int stemSize = stem.size();
-    if(stemSize == 0)
-        return inStem;
-    char last = stem[stemSize - 1];
-    char prev = stem[stemSize - 2];
+    size_t len = inStem.size();
+    if(len < 2) return inStem;
+
+    string stem = inStem;
+    char last = stem[len - 1];
+    char prev = stem[len - 2];
+
+    // Función auxiliar segura
+    auto endsWith = [&](const char* suffix, size_t suffixLen) -> bool {
+        if(stem.size() < suffixLen) return false;
+        for(size_t i = 0; i < suffixLen; i++){
+            if(stem[stem.size() - suffixLen + i] != suffix[i]) return false;
+        }
+        return true;
+    };
+
+    // Regla 1: Remover doble consonante
     if(last == prev && (last == 'b' || last == 'd' || last == 'g' ||
         last == 'l' || last == 'm' || last == 'n' || last == 'p' ||
         last == 'r' || last == 's' || last == 't')){
-        stem = stem.substr(0, stemSize - 1);
-        stemSize--;
+        stem.pop_back();
+        len--;
+        if(len < 2) return stem;
+        last = stem[len - 1];
     }
-    if(stemSize >= 3){
-        if(stem.substr(stemSize - 3) == "iev")
-            return stem.substr(0, stemSize - 1) + "f";
-        if(stem.substr(stemSize - 3) == "uct")
-            return stem.substr(0, stemSize - 1);
-        if(stemSize >= 4 && stem.substr(stemSize - 4) == "umpt")
-            return stem.substr(0, stemSize - 2);
-        if(stem.substr(stemSize - 3) == "rpt")
-            return stem.substr(0, stemSize - 2) + "b";
-        if(stem.substr(stemSize - 3) == "urs")
-            return stem.substr(0, stemSize - 1);
+
+    // Reglas de 3+ letras
+    if(len >= 3){
+        if(endsWith("iev", 3)) return stem.substr(0, len - 1) + "f";
+        if(endsWith("uct", 3)) return stem.substr(0, len - 1);
+        if(endsWith("rpt", 3)) return stem.substr(0, len - 2) + "b";
+        if(endsWith("urs", 3)) return stem.substr(0, len - 1);
     }
-    if(stemSize >= 4){
-        if(stem.substr(stemSize - 4) == "istr")
-            return stem.substr(0, stemSize - 1) + "er";
-        if(stem.substr(stemSize - 4) == "metr")
-            return stem.substr(0, stemSize - 1) + "er";
+
+    if(len >= 4){
+        if(endsWith("umpt", 4)) return stem.substr(0, len - 2);
+        if(endsWith("istr", 4)) return stem.substr(0, len - 1) + "er";
+        if(endsWith("metr", 4)) return stem.substr(0, len - 1) + "er";
     }
-    if(stemSize >= 3){
-        if(stem.substr(stemSize - 3) == "olv")
-            return stem.substr(0, stemSize - 1) + "ut";
-        if(stem.substr(stemSize - 2) == "ul"){
-            char check = stem[stemSize - 3];
-            if (check != 'a' && check != 'o' && check != 'i')
-                return stem.substr(0, stemSize - 2) + "l";
+
+    if(len >= 3){
+        if(endsWith("olv", 3)) return stem.substr(0, len - 1) + "ut";
+
+        if(endsWith("ul", 2)){
+            char check = stem[len - 3];
+            if(check != 'a' && check != 'o' && check != 'i')
+                return stem.substr(0, len - 2) + "l";
             return stem;
         }
-        suffix = stem.substr(stemSize - 3);
-        if(suffix == "bex" || suffix == "dex" || suffix == "pex" || suffix == "tex")
-            return stem.substr(0, stemSize - 2) + "ic";
+
+        if(endsWith("bex", 3) || endsWith("dex", 3) ||
+           endsWith("pex", 3) || endsWith("tex", 3))
+            return stem.substr(0, len - 2) + "ic";
+
+        if(endsWith("lux", 3)) return stem.substr(0, len - 1) + "c";
+
+        if(endsWith("uad", 3) || endsWith("vad", 3) ||
+           endsWith("cid", 3) || endsWith("lid", 3))
+            return stem.substr(0, len - 1) + "s";
+
+        if(endsWith("end", 3)){
+            if(len >= 4 && stem[len - 4] != 's')
+                return stem.substr(0, len - 1) + "s";
+            return stem;
+        }
+
+        if(endsWith("ond", 3) || endsWith("lud", 3) || endsWith("rud", 3))
+            return stem.substr(0, len - 1) + "s";
+
+        if(endsWith("her", 3)){
+            if(len >= 4 && stem[len - 4] != 'p' && stem[len - 4] != 't')
+                return stem.substr(0, len - 1) + "s";
+            return stem;
+        }
+
+        if(endsWith("mit", 3)) return stem.substr(0, len - 1) + "s";
+
+        if(endsWith("ent", 3)){
+            if(len >= 4 && stem[len - 4] != 'm')
+                return stem.substr(0, len - 1) + "s";
+            return stem;
+        }
+
+        if(endsWith("ert", 3)) return stem.substr(0, len - 1) + "s";
     }
-    if(stemSize >= 2){
-        suffix = stem.substr(stemSize - 2);
-        if(suffix == "ax" || suffix == "ex" || suffix == "ix")
-            return stem.substr(0, stemSize - 1) + "c";
-        return stem;
+
+    if(len >= 4){
+        if(endsWith("erid", 4) || endsWith("pand", 4))
+            return stem.substr(0, len - 1) + "s";
     }
-    if(stemSize >= 3){
-        if(stem.substr(stemSize - 3) == "lux")
-            return stem.substr(0, stemSize - 1) + "c";
-        suffix = stem.substr(stemSize - 3);
-        if(suffix == "uad" || suffix == "vad" || suffix == "cid" || suffix == "lid")
-            return stem.substr(0, stemSize - 1) + "s";
-        if(stemSize >= 4) {
-            suffix = stem.substr(stemSize - 4);
-            if(suffix == "erid" || suffix == "pand")
-                return stem.substr(0, stemSize - 1) + "s";
+
+    if(len >= 2){
+        if(endsWith("ax", 2) || endsWith("ex", 2) || endsWith("ix", 2))
+            return stem.substr(0, len - 1) + "c";
+
+        if(endsWith("et", 2)){
+            if(len >= 3 && stem[len - 3] != 'n')
+                return stem.substr(0, len - 1) + "s";
             return stem;
         }
-        if(stem.substr(stemSize - 3) == "end"){
-            if(stemSize >= 4 && stem[stemSize - 4] != 's')
-                return stem.substr(0, stemSize - 1) + "s";
-            return stem;
-        }
-        suffix = stem.substr(stemSize - 3);
-        if(suffix == "ond" || suffix == "lud" || suffix == "rud")
-            return stem.substr(0, stemSize - 1) + "s";
-        if(stem.substr(stemSize - 3) == "her"){
-            if (stemSize >= 4 && (stem[stemSize - 4] != 'p' && stem[stemSize - 4] != 't'))
-                return stem.substr(0, stemSize - 1) + "s";
-            return stem;
-        }
-        if(stem.substr(stemSize - 3) == "mit")
-            return stem.substr(0, stemSize - 1) + "s";
-        if(stem.substr(stemSize - 3) == "ent"){
-            if (stemSize >= 4 && stem[stemSize - 4] != 'm')
-                return stem.substr(0, stemSize - 1) + "s";
-            return stem;
-        }
-        if(stem.substr(stemSize - 3) == "ert")
-            return stem.substr(0, stemSize - 1) + "s";
+
+        if(endsWith("yt", 2) || endsWith("yz", 2))
+            return stem.substr(0, len - 1) + "s";
     }
-    if(stemSize >= 2){
-        if(stem.substr(stemSize - 2) == "et"){
-            if (stemSize >= 3 && stem[stemSize - 3] != 'n')
-                return stem.substr(0, stemSize - 1) + "s";
-            return stem;
-        }
-        string suffix = stem.substr(stemSize - 2);
-        if(suffix == "yt" || suffix == "yz")
-            return stem.substr(0, stemSize - 1) + "s";
-    }
+
     return stem;
 }

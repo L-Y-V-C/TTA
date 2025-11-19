@@ -2,6 +2,9 @@
 bin/
 obj/
 AP_BBC_CNN/
+output/
+__pycache__/
+AP_BBC_CNN-1m/
 
 # IDE files
 *.cbp

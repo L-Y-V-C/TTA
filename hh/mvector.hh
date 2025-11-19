@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-const int V_INCREMENT = 5;
+const int V_INCREMENT = 10;
 
 template <typename T>
 class Mvector{
