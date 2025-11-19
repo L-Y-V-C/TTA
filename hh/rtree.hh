@@ -3,6 +3,7 @@
 
 #include "pool.hh"
 #include "mpair.hh"
+#include "distribution.hh"
 
 #include <limits>
 #include <cmath>
@@ -28,12 +29,19 @@ public:
     void insertPoint(int topicId, int time, int frequency);
     void search(int minTime, int minFreq, int maxTime, int maxFreq,
                 Mvector<Entry>& result);
+    int calculateOverlap(const Rect& rect, const Mvector<Entry>& entries,
+                         int excludeIdx);
+    Mvector<Distribution> generateDistributions(Mvector<Entry>& entries,
+                                                bool sortByLower);
+    Mpair<int, int> chooseSplitAxisAndIndex(const Mvector<Entry>& entries);
+    void reinsert(int nodeIndex, int level);
     void printStats();
     void printTree();
     void printNode(int nodeIndex, int depth);
 
     Pool pool;
     int rootIndex;
+    Mvector<bool> reinsertedAtLevel;
 };
 
 #endif
