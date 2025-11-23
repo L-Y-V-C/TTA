@@ -4,11 +4,28 @@
 
 int
 main(){
-    int batchSize = 1500;  // initial batch
-    int intervalSec = 1;    // interval between news
-    int topK = 35;          // top K topics
-    int lastMNews = 150;    // last M insertions
-    int maxWordsPerFile = 3;
+
+    int batchSize;
+    int intervalSec;
+    int topK;
+    int lastMNews;
+    int maxWordsPerFile;
+
+    ifstream config("config.txt");
+    string par;
+    while(config>>par){
+        if(par == "batchSize")
+            config>>batchSize;
+        else if(par == "intervalSec")
+            config>>intervalSec;
+        else if(par == "topK")
+            config>>topK;
+        else if(par == "lastMNews")
+            config>>lastMNews;
+        else if(par == "maxWordsPerFile")
+            config>>maxWordsPerFile;
+    }
+    config.close();
 
     TTA tta(batchSize, intervalSec, topK, lastMNews, maxWordsPerFile);
 

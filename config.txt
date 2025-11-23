@@ -1,0 +1,5 @@
+batchSize 2000
+intervalSec 1
+topK 35
+lastMNews 150
+maxWordsPerFile 3
