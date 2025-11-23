@@ -2,18 +2,18 @@
 
 Trending Topic Analyzer
 
-#Descripción del Proyecto
+## Descripción del Proyecto
 
 Sistema de análisis en tiempo real de trending topics utilizando algoritmo de stemming de Lovins y R*-tree espacial para indexación temporal-frecuencial, y hash tables personalizadas. El sistema procesa noticias, extrae palabras clave mediante stemming, las indexa en un R*-tree 2D (tiempo × frecuencia), y genera word clouds dinámicos en Python.
 Dependencias
 
-#Librerías de python necesarias:
+## Librerías de python necesarias:
 
 - pandas
 - matplotlib
 - wordcloud
 
-#Configuración inicial
+## Configuración inicial
 
 En el archivo “config.txt” se podrá configurar manualmente los parámetros iniciales los cuales son los siguientes:
 
@@ -31,7 +31,7 @@ topK 35
 lastMNews 150
 maxWordsPerFile 3
 
-# Conjunto de datos
+## Conjunto de datos
 
 En directorio que contiene las noticias a procesar debe encontrarse en el mismo directorio del archivo main.cpp y cambiarse el nombre en la linea 34 del mismo archivo.
 
@@ -39,7 +39,7 @@ tta.loadNewsFiles("Carpeta con las noticias");
 
 Adicionalmente, se proporciona un directorio con conjunto de datos con el nombre “AP_BBC_CNN” en un archivo comprimido.
 
-# Compilación
+## Compilación
 
 comando a ejecutar para iniciar el programa:
 
@@ -50,3 +50,10 @@ Este comando compila los archivos .cpp y generará un ejecutable llamado “tta�
 Se podrá ejecutar el proyecto con el comando “./tta” ó “tta”.
 
 # Estructura
+
+En la siguiente imagen vemos como se da el flujo de una inserción y busqueda para ver como se comporta la estructura, al llega una nueva palabra, esta pasa por el hash para obtener su id y frecuencia, para posteriormente 
+ser insertada como un punto en la estructura en el tiempo correspondiente. El rect de busqueda se limita por la máxima frecuencia del tamaño de ventana escogido y un porcentaje de esta para delimitarlo y asi no tomar partes
+innecesarias, los resultados tambien han de pasar por la hash para obtener la palabra en si y mandarla a la wordcloud.
+
+![img_struct_page-0001](https://github.com/user-attachments/assets/3c3c0a9c-e811-4dd6-9626-e317c644df3e)
+
