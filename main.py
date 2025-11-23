@@ -22,19 +22,18 @@ def generate_wordcloud():
             height=600,
             background_color="white"
         ).generate_from_frequencies(freq_dict)
-
+        
         plt.clf()
         plt.imshow(wc, interpolation="bilinear")
         plt.axis("off")
-        plt.title("Trending Topics (actualizado)")
+        plt.title("Trending Topics")
         plt.pause(0.01)
 
     except Exception as e:
-        print("ERROR procesando CSV:", e)
+        print("ERROR FILE", e)
 
 def main():
     plt.ion()
-    print("Generando WordCloud en vivo...")
     while True:
         generate_wordcloud()
         time.sleep(REFRESH_SECONDS)
