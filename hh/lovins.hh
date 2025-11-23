@@ -19,7 +19,7 @@ public:
     void readAppendixA();
     void readStopwords();
     vector<pair<string, int>> readFile(const string& fileName,
-                                       int maxWords = 5);
+                                       size_t maxWords = 5);
     string aplyStemming(const string& token);
     bool evaluateCondition(const string& cond, const string& stem);
     string recoding(const string& inStem);

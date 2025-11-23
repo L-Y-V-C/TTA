@@ -10,6 +10,7 @@
 #include "rtree.hh"
 #include "mhashtable.hh"
 #include "topicdata.hh"
+#include "topicwindow.hh"
 
 namespace fs = std::filesystem;
 using namespace std::chrono;
@@ -22,21 +23,22 @@ public:
     void initialize(const string& stopwordsPath, const string& appendixPath);
     void loadNewsFiles(const string& newsFolder);
     void processNews();
-    void insertWord(const string& word, int frequency);
+    void insertWord(const string& word, int frequency, bool updateWindow = true);
     int getPercentile();
-    Mvector<Mpair<string, int>> getTopKTopics();
     void exportToCSV(const Mvector<Mpair<string, int>>& topics, const string& filepath);
 
     Lovins stemmer;
     RTree rtree;
     MhashTable<string, TopicData> wordHash;
     MhashTable<int, string> idToWord;
+    Mvector<Mpair<string, int>> getTopKTopics();
+    TopicWindow topicWindow;
     int nextWordId;
     int currentTime;
     int maxFrequency;
-    int initialBatchSize;
+    size_t initialBatchSize;
     int readIntervalSeconds;
-    int topK;
+    size_t topK;
     int lastMNews;
     int maxWordsPerFile;
     vector<string> allNewsFiles;
