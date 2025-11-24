@@ -51,9 +51,37 @@ Se podrá ejecutar el proyecto con el comando “./tta” ó “tta”.
 
 # Estructura
 
-En la siguiente imagen vemos como se da el flujo de una inserción y busqueda para ver como se comporta la estructura, al llega una nueva palabra, esta pasa por el hash para obtener su id y frecuencia, para posteriormente 
-ser insertada como un punto en la estructura en el tiempo correspondiente. El rect de busqueda se limita por la máxima frecuencia del tamaño de ventana escogido y un porcentaje de esta para delimitarlo y asi no tomar partes
-innecesarias, los resultados tambien han de pasar por la hash para obtener la palabra en si y mandarla a la wordcloud.
+Se usa un R*-Tree bidimensional, donde cada palabra se representa como un punto en un espacio de coordenadas (tiempo, frecuencia). El eje X corresponde al tiempo incremental, mientras que el eje Y representa la frecuencia acumulada de cada palabra en ese momento específico, esta representación espacial permite realizar búsquedas eficientes sobre ventanas temporales y rangos de frecuencia mediante consultas rectangulares, además se usan dos tablas hash complementarias que mantienen la correspondencia entre palabras y sus identificadores.
 
-![img_struct_page-0001](https://github.com/user-attachments/assets/3c3c0a9c-e811-4dd6-9626-e317c644df3e)
+A continuación vemos 
 
+┌──────────────────────────┐        ┌──────────────────────────┐
+│   wordHash               │◄──────►│   idToWord               │
+│   (string → TopicData)   │  sync  │   (int → string)         │
+├──────────────────────────┤        ├──────────────────────────┤
+│ "trump" → (5, 150)       │        │ 5 → "trump"              │
+│ "elect" → (3, 120)       │        │ 3 → "elect"              │
+│ "biden" → (8, 95)        │        │ 8 → "biden"              │
+│ "vote"  → (12, 80)       │        │ 12 → "vote"              │
+│ "polit" → (7, 70)        │        │ 7 → "polit"              │
+└───────────┬──────────────┘        └──────────┬───────────────┘
+            │                                   │
+            │ wordId + freq                     │ wordId → word
+            ▼                                   ▼
+┌────────────────────────────────────────────────────┐
+│                      R*-Tree (2D Space)            │
+│  freq                                              │
+│    ▲                                               │
+│    │   ┌──────────────────────────────┐            │
+│    │   │  MBR: Root                   │            │
+│    │   │ ┌───────┴────┐  ┌──────────┴─┐            │
+│    │   │ │ MBR: Node1 │  │ MBR: Node2 │            │
+│  15├───┼─┤  ●5 ●3     │  │   ●8       │            │
+│    │   │ │    ●7      │  │      ●12   │            │
+│    │   │ └────────────┘  └────────────┘            │
+│    │   └──────────────────────────────┴            │
+│    └───┴────┴────┴────┴────┴────┴────┴─────► time  │
+│        5    10   15   20   25   30   35            │
+│                                                    │
+└────────────────────────────────────────────────────┘
+● = Punto (wordId, time, freq), cada punto representa una aparición de palabra
