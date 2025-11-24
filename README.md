@@ -53,35 +53,6 @@ Se podrá ejecutar el proyecto con el comando “./tta” ó “tta”.
 
 Se usa un R*-Tree bidimensional, donde cada palabra se representa como un punto en un espacio de coordenadas (tiempo, frecuencia). El eje X corresponde al tiempo incremental, mientras que el eje Y representa la frecuencia acumulada de cada palabra en ese momento específico, esta representación espacial permite realizar búsquedas eficientes sobre ventanas temporales y rangos de frecuencia mediante consultas rectangulares, además se usan dos tablas hash complementarias que mantienen la correspondencia entre palabras y sus identificadores.
 
-A continuación vemos 
+A continuación vemos una representación de las estructuras:
 
-┌──────────────────────────┐        ┌──────────────────────────┐
-│   wordHash               │◄──────►│   idToWord               │
-│   (string → TopicData)   │  sync  │   (int → string)         │
-├──────────────────────────┤        ├──────────────────────────┤
-│ "trump" → (5, 150)       │        │ 5 → "trump"              │
-│ "elect" → (3, 120)       │        │ 3 → "elect"              │
-│ "biden" → (8, 95)        │        │ 8 → "biden"              │
-│ "vote"  → (12, 80)       │        │ 12 → "vote"              │
-│ "polit" → (7, 70)        │        │ 7 → "polit"              │
-└───────────┬──────────────┘        └──────────┬───────────────┘
-            │                                   │
-            │ wordId + freq                     │ wordId → word
-            ▼                                   ▼
-┌────────────────────────────────────────────────────┐
-│                      R*-Tree (2D Space)            │
-│  freq                                              │
-│    ▲                                               │
-│    │   ┌──────────────────────────────┐            │
-│    │   │  MBR: Root                   │            │
-│    │   │ ┌───────┴────┐  ┌──────────┴─┐            │
-│    │   │ │ MBR: Node1 │  │ MBR: Node2 │            │
-│  15├───┼─┤  ●5 ●3     │  │   ●8       │            │
-│    │   │ │    ●7      │  │      ●12   │            │
-│    │   │ └────────────┘  └────────────┘            │
-│    │   └──────────────────────────────┴            │
-│    └───┴────┴────┴────┴────┴────┴────┴─────► time  │
-│        5    10   15   20   25   30   35            │
-│                                                    │
-└────────────────────────────────────────────────────┘
-● = Punto (wordId, time, freq), cada punto representa una aparición de palabra
+<img width="536" height="610" alt="image" src="https://github.com/user-attachments/assets/25a60ce4-54ee-42d7-a7a6-b4b0a7b71352" />
